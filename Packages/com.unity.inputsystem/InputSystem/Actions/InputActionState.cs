@@ -2777,13 +2777,13 @@ namespace UnityEngine.InputSystem
             }
 
             // Run value through processors, if any.
-            var processorCount = bindingStates[bindingIndex].processorCount;
-            if (processorCount > 0)
-            {
-                var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
-                for (var i = 0; i < processorCount; ++i)
-                    processors[processorStartIndex + i].Process(buffer, bufferSize, control);
-            }
+            // var processorCount = bindingStates[bindingIndex].processorCount;
+            // if (processorCount > 0)
+            // {
+            //     var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
+            //     for (var i = 0; i < processorCount; ++i)
+            //         processors[processorStartIndex + i].Process(buffer, bufferSize, control);
+            // }
         }
 
         internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex, bool ignoreComposites = false)
@@ -2845,12 +2845,15 @@ namespace UnityEngine.InputSystem
                         throw new InvalidOperationException(
                             $"Cannot read value of type '{TypeHelpers.GetNiceTypeName(typeof(TValue))}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
 
-                    value = controlOfType.value;
+                    // value = controlOfType.value;
+                    value = controlOfType.ReadUnprocessedValueFromState(controlOfType.currentStatePtr);
                 }
             }
 
+            return value;
+
             // Run value through processors, if any.
-            return ApplyProcessors(bindingIndex, value, controlOfType);
+            // return ApplyProcessors(bindingIndex, value, controlOfType);
         }
 
         internal TValue ApplyProcessors<TValue>(int bindingIndex, TValue value, InputControl<TValue> controlOfType = null)

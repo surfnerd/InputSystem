@@ -1035,9 +1035,14 @@ namespace UnityEngine.InputSystem
                 return default(TValue);
 
             var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+
+            // return actionStatePtr->phase.IsInProgress()
+            //     ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
+            //     : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
+
             return actionStatePtr->phase.IsInProgress()
                 ? state.ReadValue<TValue>(actionStatePtr->bindingIndex, actionStatePtr->controlIndex)
-                : state.ApplyProcessors(actionStatePtr->bindingIndex, default(TValue));
+                : default;
         }
 
         /// <summary>
@@ -2092,9 +2097,11 @@ namespace UnityEngine.InputSystem
                 var value = default(TValue);
                 if (m_State != null)
                 {
-                    value = phase.IsInProgress() ?
-                        m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
-                        m_State.ApplyProcessors(bindingIndex, value);
+                    // value = phase.IsInProgress() ?
+                    //     m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
+                    //     m_State.ApplyProcessors(bindingIndex, value);
+
+                    value = phase.IsInProgress() ? m_State.ReadValue<TValue>(bindingIndex, controlIndex) : value;
                 }
 
                 return value;
