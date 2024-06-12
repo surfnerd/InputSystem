@@ -3657,6 +3657,9 @@ namespace UnityEngine.InputSystem
         internal unsafe bool UpdateState(InputDevice device, InputUpdateType updateType,
             void* statePtr, uint stateOffsetInDevice, uint stateSize, double internalTime, InputEventPtr eventPtr = default)
         {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            
             var deviceIndex = device.m_DeviceIndex;
             ref var stateBlockOfDevice = ref device.m_StateBlock;
 
@@ -3719,6 +3722,8 @@ namespace UnityEngine.InputSystem
             if (haveSignalledMonitors)
                 FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
 
+            stopWatch.Stop();
+            InputProfilerMetrics.InputWriteStateChangeTime.Value = stopWatch.Elapsed.TotalMilliseconds * 1000 * 1000;
             return makeDeviceCurrent;
         }
 
@@ -3762,6 +3767,7 @@ namespace UnityEngine.InputSystem
 
             UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
                 stateSizeInBytes);
+            
         }
 
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
