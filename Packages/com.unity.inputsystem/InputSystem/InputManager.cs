@@ -2921,6 +2921,8 @@ namespace UnityEngine.InputSystem
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
+            var updateTime = new Stopwatch();
+            updateTime.Start();
 
             if (m_InputEventStream.isOpen)
             {
@@ -2939,6 +2941,8 @@ namespace UnityEngine.InputSystem
             if ((updateType & m_UpdateMask) == 0)
             {
                 Profiler.EndSample();
+                updateTime.Stop();
+                InputProfilerMetrics.InputUpdateTime.Value = updateTime.Elapsed.TotalMilliseconds * 1000 * 1000;
                 return;
             }
 
@@ -3478,6 +3482,8 @@ namespace UnityEngine.InputSystem
                 // to avoid failing recursive OnUpdate check next frame.
                 Profiler.EndSample();
                 m_InputEventStream.CleanUpAfterException();
+                updateTime.Stop();
+                InputProfilerMetrics.InputUpdateTime.Value = updateTime.Elapsed.TotalMilliseconds * 1000 * 1000;
                 throw;
             }
 
@@ -3485,6 +3491,8 @@ namespace UnityEngine.InputSystem
                 ProcessStateChangeMonitorTimeouts();
 
             Profiler.EndSample();
+            updateTime.Stop();
+            InputProfilerMetrics.InputUpdateTime.Value += updateTime.Elapsed.TotalMilliseconds * 1000 * 1000;
 
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
