@@ -1958,7 +1958,7 @@ namespace UnityEngine.InputSystem
             }
 
             m_Runtime = runtime;
-            // m_Runtime.onUpdate = OnUpdate;
+            m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onPlayerFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
