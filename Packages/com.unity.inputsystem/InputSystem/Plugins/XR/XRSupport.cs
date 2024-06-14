@@ -28,7 +28,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public const string InterfaceCurrent = "XRInputV1";
 
-        public static Dictionary<string, Tuple<int, int>> FeatureMap { get; } = new();
+        public static Dictionary<string, Dictionary<string, (int, int)>> DeviceMap { get; } = new();
 
         static XRInputSubsystem s_XRInputSubsystem;
         public static XRInputSubsystem XRInputSubsystem
@@ -48,6 +48,11 @@ namespace UnityEngine.InputSystem.XR
 
                 return s_XRInputSubsystem;
             }
+        }
+
+        public static (int, int) GetDeviceFeatureTuple(string deviceName, string featureName)
+        {
+            return DeviceMap[deviceName][featureName];
         }
     }
 
@@ -304,53 +309,61 @@ namespace UnityEngine.InputSystem.XR
 
     public class BinaryControl : ButtonControl
     {
-        // public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
-        // {
-        //     return *(float*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Binary);
-        // }
+        public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
+        {
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
+
+            return *(float*)XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.Binary);
+        }
     }
 
     public class DiscreteStatesControl : IntegerControl
     {
-        // public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
-        // {
-        //     return *(int*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.DiscreteStates);
-        // }
+        public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
+        {
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
+
+            return *(int*)XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.DiscreteStates);
+        }
     }
 
     public class Axis1DControl : AxisControl
     {
-        // public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
-        // {
-        //     return *(float*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Axis1D);
-        // }
+        public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
+        {
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
+
+            return *(float*)XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.Axis1D);
+        }
     }
 
     public class Axis2DControl : StickControl
     {
-        // public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
-        // {
-        //     return *(Vector2*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Axis2D);
-        // }
+        public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
+        {
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
+
+            return *(Vector2*)XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.Axis2D);
+        }
     }
 
     public class Axis3DControl : Vector3Control
     {
-        // public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
-        // {
-        //     return *(Vector3*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Axis3D);
-        // }
+        public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
+        {
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
+
+            return *(Vector3*)XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.Axis3D);
+        }
     }
 
     public class RotationControl : QuaternionControl
     {
         public override unsafe Quaternion ReadUnprocessedValueFromState(void* statePtr)
         {
-            var pair = XRUtilities.FeatureMap[name];
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
 
-            XRUtilities.XRInputSubsystem.GetInputValue(pair.Item1, pair.Item2, InputFeatureType.Rotation);
-
-            return default;
+            return *(Quaternion*) XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.Rotation);
         }
     }
 
@@ -374,14 +387,9 @@ namespace UnityEngine.InputSystem.XR
 
         public override unsafe Bone ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Bone()
-            {
-                parentBoneIndex = (uint)parentBoneIndex.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                position = position.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                rotation = rotation.ReadUnprocessedValueFromStateWithCaching(statePtr)
-            };
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
 
-            // return *(Bone*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Bone);
+            return *(Bone*)XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.Bone);
         }
 
         public override unsafe void WriteValueIntoState(Bone value, void* statePtr)
@@ -424,18 +432,9 @@ namespace UnityEngine.InputSystem.XR
 
         public override unsafe Eyes ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Eyes()
-            {
-                leftEyePosition = leftEyePosition.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                leftEyeRotation = leftEyeRotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                rightEyePosition = rightEyePosition.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                rightEyeRotation = rightEyeRotation.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                fixationPoint = fixationPoint.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                leftEyeOpenAmount = leftEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr),
-                rightEyeOpenAmount = rightEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr)
-            };
+            (int deviceId, int featureIndex) = XRUtilities.GetDeviceFeatureTuple(device.name, name);
 
-            // return *(Eyes*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Eyes);
+            return *(Eyes*)XRUtilities.XRInputSubsystem.GetInputValue(deviceId, featureIndex, InputFeatureType.Eyes);
         }
 
         public override unsafe void WriteValueIntoState(Eyes value, void* statePtr)

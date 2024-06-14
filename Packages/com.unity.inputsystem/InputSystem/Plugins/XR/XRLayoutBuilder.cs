@@ -181,6 +181,15 @@ namespace UnityEngine.InputSystem.XR
             return true;
         }
 
+        public string WithAllWhitespaceStripped(string str)
+        {
+            var buffer = new StringBuilder();
+            foreach (var ch in str)
+                if (!char.IsWhiteSpace(ch))
+                    buffer.Append(ch);
+            return buffer.ToString();
+        }
+
         private InputControlLayout Build()
         {
             var builder = new InputControlLayout.Builder
@@ -198,6 +207,10 @@ namespace UnityEngine.InputSystem.XR
 
             var parentControls = new List<string>();
             var currentUsages = new List<string>();
+
+            var deviceNameWithNoWhiteSpace = WithAllWhitespaceStripped(descriptor.deviceName);
+
+            XRUtilities.DeviceMap.Add(deviceNameWithNoWhiteSpace, new Dictionary<string, (int, int)>());
 
             uint currentOffset = 0;
             for (var i = 0; i < descriptor.inputFeatures.Count; i++)
@@ -250,7 +263,7 @@ namespace UnityEngine.InputSystem.XR
                         currentOffset += (4 - (currentOffset % 4));
                 }
 
-                XRUtilities.FeatureMap.Add(featureName, new Tuple<int, int>(descriptor.deviceId, i));
+                XRUtilities.DeviceMap[deviceNameWithNoWhiteSpace].Add(featureName, (descriptor.deviceId, i));
 
                 switch (feature.featureType)
                 {

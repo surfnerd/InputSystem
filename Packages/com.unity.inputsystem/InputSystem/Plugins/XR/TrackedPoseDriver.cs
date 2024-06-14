@@ -260,8 +260,8 @@ namespace UnityEngine.InputSystem.XR
             if (action == null)
                 return;
 
-            action.performed += OnPositionPerformed;
-            action.canceled += OnPositionCanceled;
+            // action.performed += OnPositionPerformed;
+            // action.canceled += OnPositionCanceled;
             m_PositionBound = true;
 
             if (m_PositionInput.reference == null)
@@ -280,8 +280,8 @@ namespace UnityEngine.InputSystem.XR
             if (action == null)
                 return;
 
-            action.performed += OnRotationPerformed;
-            action.canceled += OnRotationCanceled;
+            // action.performed += OnRotationPerformed;
+            // action.canceled += OnRotationCanceled;
             m_RotationBound = true;
 
             if (m_RotationInput.reference == null)
@@ -300,8 +300,8 @@ namespace UnityEngine.InputSystem.XR
             if (action == null)
                 return;
 
-            action.performed += OnTrackingStatePerformed;
-            action.canceled += OnTrackingStateCanceled;
+            // action.performed += OnTrackingStatePerformed;
+            // action.canceled += OnTrackingStateCanceled;
             m_TrackingStateBound = true;
 
             if (m_TrackingStateInput.reference == null)
@@ -323,8 +323,8 @@ namespace UnityEngine.InputSystem.XR
             if (m_PositionInput.reference == null)
                 action.Disable();
 
-            action.performed -= OnPositionPerformed;
-            action.canceled -= OnPositionCanceled;
+            // action.performed -= OnPositionPerformed;
+            // action.canceled -= OnPositionCanceled;
             m_PositionBound = false;
         }
 
@@ -340,8 +340,8 @@ namespace UnityEngine.InputSystem.XR
             if (m_RotationInput.reference == null)
                 action.Disable();
 
-            action.performed -= OnRotationPerformed;
-            action.canceled -= OnRotationCanceled;
+            // action.performed -= OnRotationPerformed;
+            // action.canceled -= OnRotationCanceled;
             m_RotationBound = false;
         }
 
@@ -357,8 +357,8 @@ namespace UnityEngine.InputSystem.XR
             if (m_TrackingStateInput.reference == null)
                 action.Disable();
 
-            action.performed -= OnTrackingStatePerformed;
-            action.canceled -= OnTrackingStateCanceled;
+            // action.performed -= OnTrackingStatePerformed;
+            // action.canceled -= OnTrackingStateCanceled;
             m_TrackingStateBound = false;
         }
 
@@ -423,6 +423,7 @@ namespace UnityEngine.InputSystem.XR
         {
             m_CurrentPosition = positionAction.ReadValue<Vector3>();
             m_CurrentRotation = rotationAction.ReadValue<Quaternion>();
+            m_CurrentTrackingState = (TrackingStates)m_TrackingStateInput.action.ReadValue<int>();
         }
 
         /// <summary>
