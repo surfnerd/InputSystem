@@ -190,6 +190,8 @@ namespace UnityEngine.InputSystem.XR
                 updateBeforeRender = true
             };
 
+            // builder.WithType<XRInputControl>();
+
             var inheritedLayout = !string.IsNullOrEmpty(parentLayout)
                 ? InputSystem.LoadLayout(parentLayout)
                 : null;
@@ -248,13 +250,14 @@ namespace UnityEngine.InputSystem.XR
                         currentOffset += (4 - (currentOffset % 4));
                 }
 
+                XRUtilities.FeatureMap.Add(featureName, new Tuple<int, int>(descriptor.deviceId, i));
 
                 switch (feature.featureType)
                 {
                     case FeatureType.Binary:
                     {
                         builder.AddControl(featureName)
-                            .WithLayout("Button")
+                            .WithLayout("Binary")
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatBit)
                             .WithUsages(currentUsages);
@@ -263,7 +266,7 @@ namespace UnityEngine.InputSystem.XR
                     case FeatureType.DiscreteStates:
                     {
                         builder.AddControl(featureName)
-                            .WithLayout("Integer")
+                            .WithLayout("DiscreteStates")
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatInt)
                             .WithUsages(currentUsages);
@@ -272,7 +275,7 @@ namespace UnityEngine.InputSystem.XR
                     case FeatureType.Axis1D:
                     {
                         builder.AddControl(featureName)
-                            .WithLayout("Analog")
+                            .WithLayout("Axis1D")
                             .WithRange(-1, 1)
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatFloat)
@@ -282,7 +285,7 @@ namespace UnityEngine.InputSystem.XR
                     case FeatureType.Axis2D:
                     {
                         builder.AddControl(featureName)
-                            .WithLayout("Stick")
+                            .WithLayout("Axis2D")
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatVector2)
                             .WithUsages(currentUsages);
@@ -298,7 +301,7 @@ namespace UnityEngine.InputSystem.XR
                     case FeatureType.Axis3D:
                     {
                         builder.AddControl(featureName)
-                            .WithLayout("Vector3")
+                            .WithLayout("Axis3D")
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatVector3)
                             .WithUsages(currentUsages);
@@ -307,7 +310,7 @@ namespace UnityEngine.InputSystem.XR
                     case FeatureType.Rotation:
                     {
                         builder.AddControl(featureName)
-                            .WithLayout("Quaternion")
+                            .WithLayout("Rotation")
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatQuaternion)
                             .WithUsages(currentUsages);
@@ -334,6 +337,7 @@ namespace UnityEngine.InputSystem.XR
                         break;
                     }
                 }
+
                 currentOffset += nextOffset;
             }
 

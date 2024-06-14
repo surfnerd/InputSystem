@@ -27,6 +27,28 @@ namespace UnityEngine.InputSystem.XR
         /// The current interface code sent with devices to identify as XRInput devices.
         /// </summary>
         public const string InterfaceCurrent = "XRInputV1";
+
+        public static Dictionary<string, Tuple<int, int>> FeatureMap { get; } = new();
+
+        static XRInputSubsystem s_XRInputSubsystem;
+        public static XRInputSubsystem XRInputSubsystem
+        {
+            get
+            {
+                if (s_XRInputSubsystem == null)
+                {
+                    List<XRInputSubsystem> inputSubsystems = new List<XRInputSubsystem>();
+                    SubsystemManager.GetSubsystems(inputSubsystems);
+
+                    if (inputSubsystems.Count == 1)
+                    {
+                        s_XRInputSubsystem = inputSubsystems[0];
+                    }
+                }
+
+                return s_XRInputSubsystem;
+            }
+        }
     }
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
@@ -280,6 +302,58 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    public class BinaryControl : ButtonControl
+    {
+        // public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
+        // {
+        //     return *(float*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Binary);
+        // }
+    }
+
+    public class DiscreteStatesControl : IntegerControl
+    {
+        // public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
+        // {
+        //     return *(int*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.DiscreteStates);
+        // }
+    }
+
+    public class Axis1DControl : AxisControl
+    {
+        // public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
+        // {
+        //     return *(float*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Axis1D);
+        // }
+    }
+
+    public class Axis2DControl : StickControl
+    {
+        // public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
+        // {
+        //     return *(Vector2*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Axis2D);
+        // }
+    }
+
+    public class Axis3DControl : Vector3Control
+    {
+        // public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
+        // {
+        //     return *(Vector3*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Axis3D);
+        // }
+    }
+
+    public class RotationControl : QuaternionControl
+    {
+        public override unsafe Quaternion ReadUnprocessedValueFromState(void* statePtr)
+        {
+            var pair = XRUtilities.FeatureMap[name];
+
+            XRUtilities.XRInputSubsystem.GetInputValue(pair.Item1, pair.Item2, InputFeatureType.Rotation);
+
+            return default;
+        }
+    }
+
     public class BoneControl : InputControl<Bone>
     {
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
@@ -306,6 +380,8 @@ namespace UnityEngine.InputSystem.XR
                 position = position.ReadUnprocessedValueFromStateWithCaching(statePtr),
                 rotation = rotation.ReadUnprocessedValueFromStateWithCaching(statePtr)
             };
+
+            // return *(Bone*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Bone);
         }
 
         public override unsafe void WriteValueIntoState(Bone value, void* statePtr)
@@ -358,6 +434,8 @@ namespace UnityEngine.InputSystem.XR
                 leftEyeOpenAmount = leftEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr),
                 rightEyeOpenAmount = rightEyeOpenAmount.ReadUnprocessedValueFromStateWithCaching(statePtr)
             };
+
+            // return *(Eyes*)XRUtilities.XRInputSubsystem.GetInputValue(m_deviceId, m_featureIndex, InputFeatureType.Eyes);
         }
 
         public override unsafe void WriteValueIntoState(Eyes value, void* statePtr)
@@ -389,6 +467,12 @@ namespace UnityEngine.InputSystem.XR
         public static void Initialize()
         {
 #if !UNITY_FORCE_INPUTSYSTEM_XR_OFF
+            InputSystem.RegisterLayout<BinaryControl>("Binary");
+            InputSystem.RegisterLayout<DiscreteStatesControl>("DiscreteStates");
+            InputSystem.RegisterLayout<Axis1DControl>("Axis1D");
+            InputSystem.RegisterLayout<Axis2DControl>("Axis2D");
+            InputSystem.RegisterLayout<Axis3DControl>("Axis3D");
+            InputSystem.RegisterLayout<RotationControl>("Rotation");
             InputSystem.RegisterLayout<PoseControl>("Pose");
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");

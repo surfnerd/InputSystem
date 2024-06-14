@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.PlayerLoop;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -413,6 +414,15 @@ namespace UnityEngine.InputSystem.XR
                 UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(cameraComponent, true);
             }
 #endif
+        }
+
+        /// <summary>
+        /// This function is called when the script instance is being loaded.
+        /// </summary>
+        protected virtual void Update()
+        {
+            m_CurrentPosition = positionAction.ReadValue<Vector3>();
+            m_CurrentRotation = rotationAction.ReadValue<Quaternion>();
         }
 
         /// <summary>
