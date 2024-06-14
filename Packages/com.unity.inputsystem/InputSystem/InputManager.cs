@@ -2921,8 +2921,7 @@ namespace UnityEngine.InputSystem
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
-            var updateTime = new Stopwatch();
-            updateTime.Start();
+            updateStopWatch.Start();
 
             if (m_InputEventStream.isOpen)
             {
@@ -2941,58 +2940,58 @@ namespace UnityEngine.InputSystem
             if ((updateType & m_UpdateMask) == 0)
             {
                 Profiler.EndSample();
-                updateTime.Stop();
-                InputProfilerMetrics.InputUpdateTime.Value = updateTime.Elapsed.TotalMilliseconds * 1000 * 1000;
+                updateStopWatch.Stop();
+                InputProfilerMetrics.InputUpdateTime.Value = updateStopWatch.Elapsed.TotalMilliseconds * 1000 * 1000;
                 return;
             }
 
-            WarnAboutDevicesFailingToRecreateAfterDomainReload();
+             WarnAboutDevicesFailingToRecreateAfterDomainReload();
 
-            // First update sends out startup analytics.
-            #if UNITY_ANALYTICS || UNITY_EDITOR
-            if (!m_HaveSentStartupAnalytics)
-            {
-                InputAnalytics.OnStartup(this);
-                m_HaveSentStartupAnalytics = true;
-            }
-            #endif
+             // First update sends out startup analytics.
+             #if UNITY_ANALYTICS || UNITY_EDITOR
+             if (!m_HaveSentStartupAnalytics)
+             {
+                 InputAnalytics.OnStartup(this);
+                 m_HaveSentStartupAnalytics = true;
+             }
+             #endif
 
-            // Update metrics.
-            ++m_Metrics.totalUpdateCount;
+             // Update metrics.
+             ++m_Metrics.totalUpdateCount;
 
-            #if UNITY_EDITOR
-            // If current update is editor update and previous update was non-editor,
-            // store the time offset so we can restore it right after editor update is complete
-            if (((updateType & InputUpdateType.Editor) == InputUpdateType.Editor) && (m_CurrentUpdate & InputUpdateType.Editor) == 0)
-                latestNonEditorTimeOffsetToRealtimeSinceStartup =
-                    InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
-            #endif
+             #if UNITY_EDITOR
+             // If current update is editor update and previous update was non-editor,
+             // store the time offset so we can restore it right after editor update is complete
+             if (((updateType & InputUpdateType.Editor) == InputUpdateType.Editor) && (m_CurrentUpdate & InputUpdateType.Editor) == 0)
+                 latestNonEditorTimeOffsetToRealtimeSinceStartup =
+                     InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+             #endif
 
-            // Store current time offset.
-            InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
+             // Store current time offset.
+             InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
-            InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
+             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
-            m_CurrentUpdate = updateType;
-            InputUpdate.OnUpdate(updateType);
+             m_CurrentUpdate = updateType;
+             InputUpdate.OnUpdate(updateType);
 
-            // Ensure optimized controls are in valid state
-            CheckAllDevicesOptimizedControlsHaveValidState();
+             // Ensure optimized controls are in valid state
+             CheckAllDevicesOptimizedControlsHaveValidState();
 
-            var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
+             var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
 
-            // See if we're supposed to only take events up to a certain time.
-            // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
-            //       all events in the buffer each time. Note that if there are multiple events for the same
-            //       device, it depends on the producer of these events to queue them in correct order.
-            //       Otherwise, once an event with a newer timestamp has been processed, events coming later
-            //       in the buffer and having older timestamps will get rejected.
+             // See if we're supposed to only take events up to a certain time.
+             // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
+             //       all events in the buffer each time. Note that if there are multiple events for the same
+             //       device, it depends on the producer of these events to queue them in correct order.
+             //       Otherwise, once an event with a newer timestamp has been processed, events coming later
+             //       in the buffer and having older timestamps will get rejected.
 
-            var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = (updateType == InputUpdateType.Fixed || updateType == InputUpdateType.BeforeRender) &&
-                InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
+             var timesliceEvents = (updateType == InputUpdateType.Fixed || updateType == InputUpdateType.BeforeRender) &&
+                 InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
-            // Figure out if we can just flush the buffer and early out.
+             // Figure out if we can just flush the buffer and early out.
             var canFlushBuffer =
                 false
 #if UNITY_EDITOR
@@ -3003,7 +3002,7 @@ namespace UnityEngine.InputSystem
 #else
                 || (!gameHasFocus && !m_Runtime.runInBackground)
 #endif
-            ;
+             ;
             var canEarlyOut =
                 // Early out if there's no events to process.
                 eventBuffer.eventCount == 0
@@ -3025,37 +3024,37 @@ namespace UnityEngine.InputSystem
 
 
 #if UNITY_EDITOR
-            var dropStatusEvents = false;
-            if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
-            {
-                // If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
-                // So, in that case, set a flag to say we'd like to drop status events, and do not early out.
-                canEarlyOut = false;
-                dropStatusEvents = true;
-            }
+             var dropStatusEvents = false;
+             if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
+             {
+                 // If the game is not playing but we're sending all input events to the game, the buffer can just grow unbounded.
+                 // So, in that case, set a flag to say we'd like to drop status events, and do not early out.
+                 canEarlyOut = false;
+                 dropStatusEvents = true;
+             }
 #endif
 
-            if (canEarlyOut)
-            {
-                // Normally, we process action timeouts after first processing all events. If we have no
-                // events, we still need to check timeouts.
-                if (shouldProcessActionTimeouts)
-                    ProcessStateChangeMonitorTimeouts();
+             if (canEarlyOut)
+             {
+                 // Normally, we process action timeouts after first processing all events. If we have no
+                 // events, we still need to check timeouts.
+                 if (shouldProcessActionTimeouts)
+                     ProcessStateChangeMonitorTimeouts();
 
-                Profiler.EndSample();
-                InvokeAfterUpdateCallback(updateType);
-                if (canFlushBuffer)
-                    eventBuffer.Reset();
-                m_CurrentUpdate = default;
-                return;
-            }
+                 Profiler.EndSample();
+                 InvokeAfterUpdateCallback(updateType);
+                 if (canFlushBuffer)
+                     eventBuffer.Reset();
+                 m_CurrentUpdate = default;
+                 return;
+             }
 
-            var processingStartTime = Stopwatch.GetTimestamp();
-            var totalEventLag = 0.0;
+             var processingStartTime = Stopwatch.GetTimestamp();
+             var totalEventLag = 0.0;
 
-            #if UNITY_EDITOR
-            var isPlaying = gameIsPlaying;
-            #endif
+             #if UNITY_EDITOR
+             var isPlaying = gameIsPlaying;
+             #endif
 
             try
             {
@@ -3482,8 +3481,8 @@ namespace UnityEngine.InputSystem
                 // to avoid failing recursive OnUpdate check next frame.
                 Profiler.EndSample();
                 m_InputEventStream.CleanUpAfterException();
-                updateTime.Stop();
-                InputProfilerMetrics.InputUpdateTime.Value = updateTime.Elapsed.TotalMilliseconds * 1000 * 1000;
+                updateStopWatch.Stop();
+                InputProfilerMetrics.InputUpdateTime.Value = updateStopWatch.Elapsed.TotalMilliseconds * 1000 * 1000;
                 throw;
             }
 
@@ -3491,8 +3490,9 @@ namespace UnityEngine.InputSystem
                 ProcessStateChangeMonitorTimeouts();
 
             Profiler.EndSample();
-            updateTime.Stop();
-            InputProfilerMetrics.InputUpdateTime.Value += updateTime.Elapsed.TotalMilliseconds * 1000 * 1000;
+            updateStopWatch.Stop();
+            InputProfilerMetrics.InputUpdateTime.Value += updateStopWatch.Elapsed.TotalMilliseconds * 1000 * 1000;
+            updateStopWatch.Reset();
 
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
@@ -3654,11 +3654,12 @@ namespace UnityEngine.InputSystem
         /// starting offset in memory.</param>
         /// <param name="eventPtr">Pointer to state event from which the state change was initiated. Null if the state
         /// change is not coming from an event.</param>
+        static Stopwatch updateStopWatch = new Stopwatch();
+        static Stopwatch stateStopWatch = new Stopwatch();
         internal unsafe bool UpdateState(InputDevice device, InputUpdateType updateType,
             void* statePtr, uint stateOffsetInDevice, uint stateSize, double internalTime, InputEventPtr eventPtr = default)
         {
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
+            stateStopWatch.Start();
             
             var deviceIndex = device.m_DeviceIndex;
             ref var stateBlockOfDevice = ref device.m_StateBlock;
@@ -3707,7 +3708,7 @@ namespace UnityEngine.InputSystem
                     statePtr, stateSize, flipped);
             }
             else
-            #endif
+#endif
             {
                 WriteStateChange(m_StateBuffers.m_PlayerStateBuffers, deviceIndex, ref stateBlockOfDevice,
                     stateOffsetInDevice, statePtr, stateSize, flipped);
@@ -3722,8 +3723,9 @@ namespace UnityEngine.InputSystem
             if (haveSignalledMonitors)
                 FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
 
-            stopWatch.Stop();
-            InputProfilerMetrics.InputWriteStateChangeTime.Value = stopWatch.Elapsed.TotalMilliseconds * 1000 * 1000;
+            stateStopWatch.Stop();
+            InputProfilerMetrics.InputWriteStateChangeTime.Value += stateStopWatch.Elapsed.TotalMilliseconds * 1000 * 1000;
+            stateStopWatch.Reset();
             return makeDeviceCurrent;
         }
 

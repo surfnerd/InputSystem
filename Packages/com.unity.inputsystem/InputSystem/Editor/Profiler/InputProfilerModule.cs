@@ -1,6 +1,5 @@
 using Unity.Profiling;
 using Unity.Profiling.Editor;
-using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {

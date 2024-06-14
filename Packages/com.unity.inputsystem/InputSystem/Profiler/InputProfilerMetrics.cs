@@ -15,5 +15,10 @@ namespace UnityEngine.InputSystem
         public static readonly ProfilerCounterValue<double> InputWriteStateChangeTime =
             new(ProfilerCategory.Input, InputWriteStateChangeTimeName, ProfilerMarkerDataUnit.TimeNanoseconds,
                 ProfilerCounterOptions.FlushOnEndOfFrame | ProfilerCounterOptions.ResetToZeroOnFlush);
+        
+        public const string InputTotalTimeName = "Input Total Time";
+        public static readonly ProfilerCounterValue<double> InputTotalTime =
+            new(ProfilerCategory.Input, InputTotalTimeName, ProfilerMarkerDataUnit.TimeNanoseconds,
+                ProfilerCounterOptions.FlushOnEndOfFrame | ProfilerCounterOptions.ResetToZeroOnFlush);
     }
 }
