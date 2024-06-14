@@ -423,7 +423,7 @@ namespace UnityEngine.InputSystem.XR
         {
             m_CurrentPosition = positionAction.ReadValue<Vector3>();
             m_CurrentRotation = rotationAction.ReadValue<Quaternion>();
-            m_CurrentTrackingState = (TrackingStates)m_TrackingStateInput.action.ReadValue<int>();
+            // m_CurrentTrackingState = (TrackingStates)m_TrackingStateInput.action.ReadValue<int>();
         }
 
         /// <summary>
